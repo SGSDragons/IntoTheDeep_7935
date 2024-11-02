@@ -79,6 +79,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
     public static double MAX_LIFT = 1500;
     public static double CLAMP_CLOSE = 0.05;
     public static double CLAMP_OPEN = 0.3;
+    public static double ARM_TAR = 0;
 
     @Override
     public void runOpMode() {
@@ -91,15 +92,16 @@ public class IntoTheDeepTeleop extends LinearOpMode {
         DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "backright");
         DcMotor arm = hardwareMap.get(DcMotor.class, "arm");
         DcMotor lift = hardwareMap.get(DcMotor.class, "lift");
-        Servo clamp = hardwareMap.get(Servo.class, "intake");
+        Servo clamp = hardwareMap.get(Servo.class, "claw");
         Servo dump = hardwareMap.get(Servo.class, "dump");
 
-        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
         double liftstart = lift.getCurrentPosition();
+        double armstart = arm.getCurrentPosition();
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -126,17 +128,34 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             double leftBackPower   = axial - lateral + yaw;
             double rightBackPower  = axial + lateral - yaw;
 
+            // This ensures that the robot maintains the desired motion.
+            max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
+            max = Math.max(max, Math.abs(leftBackPower));
+            max = Math.max(max, Math.abs(rightBackPower));
+
+            if (max > 1.0) {
+                leftFrontPower  /= max;
+                rightFrontPower /= max;
+                leftBackPower   /= max;
+                rightBackPower  /= max;
+            }
+
+            // Send calculated power to wheels
+            leftFrontDrive.setPower(leftFrontPower);
+            rightFrontDrive.setPower(rightFrontPower);
+            leftBackDrive.setPower(leftBackPower);
+            rightBackDrive.setPower(rightBackPower);
+
             double liftPosition = lift.getCurrentPosition() - liftstart;
-
-            /*
-            leftFrontPower  = gamepad1.x ? 1.0 : 0.0;  // X gamepad
-            leftBackPower   = gamepad1.a ? 1.0 : 0.0;  // A gamepad
-            rightFrontPower = gamepad1.y ? 1.0 : 0.0;  // Y gamepad
-            rightBackPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
-            */
-
+            double armPosition = arm.getCurrentPosition() - armstart;
             double dumpPos = MAX_DUMP - gamepad2.right_trigger*(MAX_DUMP-MIN_DUMP);
             double clampPos = CLAMP_OPEN - gamepad2.left_trigger*(CLAMP_OPEN-CLAMP_CLOSE);
+
+//            leftFrontPower  = gamepad1.x ? 1.0 : 0.0;  // X gamepad
+//            leftBackPower   = gamepad1.a ? 1.0 : 0.0;  // A gamepad
+//            rightFrontPower = gamepad1.y ? 1.0 : 0.0;  // Y gamepad
+//            rightBackPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
+
             dump.setPosition(dumpPos);
             clamp.setPosition(clampPos);
 
@@ -152,13 +171,9 @@ public class IntoTheDeepTeleop extends LinearOpMode {
                 liftpower = 0;
             }
 
-            leftFrontDrive.setPower(leftFrontPower);
-            rightFrontDrive.setPower(rightFrontPower);
-            leftBackDrive.setPower(leftBackPower);
-            rightBackDrive.setPower(rightBackPower);
             arm.setPower(armpower);
             lift.setPower(liftpower);
-
+            //arm.setTargetPosition(ARM_TAR);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
@@ -168,6 +183,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             telemetry.addData("Dump Pose", "%4.2f", dump.getPosition());
             telemetry.update();
             TelemetryPacket packet = new TelemetryPacket();
+            packet.put("Lift Pose", arm.getCurrentPosition());
             packet.put("Lift Pose", lift.getCurrentPosition());
             packet.put("Lift Start", liftstart);
             packet.put("Dump Pose", dump.getPosition());
