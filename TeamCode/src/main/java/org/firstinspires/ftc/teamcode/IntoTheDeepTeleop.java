@@ -29,6 +29,9 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -64,38 +67,39 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: Omni Linear OpMode", group="Linear OpMode")
-@Disabled
+@TeleOp(name="7935Teleop", group="Linear OpMode")
+@Config
 public class IntoTheDeepTeleop extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor leftFrontDrive = null;
-    private DcMotor leftBackDrive = null;
-    private DcMotor rightFrontDrive = null;
-    private DcMotor rightBackDrive = null;
-    private DcMotor arm = null;
-    private DcMotor lift = null;
-    private Servo intake = null;
-    private Servo dump = null;
+
+    public static double MIN_DUMP = 0.0;
+    public static double MAX_DUMP = 1.0;
+    public static double MAX_LIFT = 1500;
+    public static double CLAMP_CLOSE = 0.05;
+    public static double CLAMP_OPEN = 0.3;
+
     @Override
     public void runOpMode() {
 
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
-        leftFrontDrive  = hardwareMap.get(DcMotor.class, "frontleft");
-        rightFrontDrive = hardwareMap.get(DcMotor.class, "frontright");
-        leftBackDrive  = hardwareMap.get(DcMotor.class, "backleft");
-        rightBackDrive = hardwareMap.get(DcMotor.class, "backright");
-        arm = hardwareMap.get(DcMotor.class, "arm");
-        lift = hardwareMap.get(DcMotor.class, "lift");
-        intake = hardwareMap.get(Servo.class, "intake");
-        dump = hardwareMap.get(Servo.class, "dump");
+        DcMotor leftFrontDrive  = hardwareMap.get(DcMotor.class, "frontleft");
+        DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "frontright");
+        DcMotor leftBackDrive  = hardwareMap.get(DcMotor.class, "backleft");
+        DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "backright");
+        DcMotor arm = hardwareMap.get(DcMotor.class, "arm");
+        DcMotor lift = hardwareMap.get(DcMotor.class, "lift");
+        Servo clamp = hardwareMap.get(Servo.class, "intake");
+        Servo dump = hardwareMap.get(Servo.class, "dump");
 
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+
+        double liftstart = lift.getCurrentPosition();
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -112,6 +116,8 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
             double lateral =  gamepad1.left_stick_x;
             double yaw     =  gamepad1.right_stick_x;
+            double liftpower = -gamepad2.right_stick_y;
+            double armpower = gamepad2.left_stick_y;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
@@ -120,6 +126,8 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             double leftBackPower   = axial - lateral + yaw;
             double rightBackPower  = axial + lateral - yaw;
 
+            double liftPosition = lift.getCurrentPosition() - liftstart;
+
             /*
             leftFrontPower  = gamepad1.x ? 1.0 : 0.0;  // X gamepad
             leftBackPower   = gamepad1.a ? 1.0 : 0.0;  // A gamepad
@@ -127,30 +135,42 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             rightBackPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
             */
 
-            if (gamepad2.a){
-                dump.setPosition(0.5);
+            double dumpPos = MAX_DUMP - gamepad2.right_trigger*(MAX_DUMP-MIN_DUMP);
+            double clampPos = CLAMP_OPEN - gamepad2.left_trigger*(CLAMP_OPEN-CLAMP_CLOSE);
+            dump.setPosition(dumpPos);
+            clamp.setPosition(clampPos);
+
+            if (gamepad2.dpad_down){
+                liftstart = lift.getCurrentPosition();
             }
 
-            if (gamepad2.b){
-                dump.setPosition(0);
+            if (liftPosition > MAX_LIFT && liftpower > 0){
+                liftpower = 0;
             }
 
-            if (gamepad2.x){
-                dump.setDirection(Servo.Direction.FORWARD);
+            if (liftPosition < 0 && liftpower < 0){
+                liftpower = 0;
             }
 
-            // Send calculated power to wheels
             leftFrontDrive.setPower(leftFrontPower);
             rightFrontDrive.setPower(rightFrontPower);
             leftBackDrive.setPower(leftBackPower);
             rightBackDrive.setPower(rightBackPower);
-            arm.setPower(gamepad2.left_stick_y);
-            lift.setPower(gamepad2.right_stick_y);
+            arm.setPower(armpower);
+            lift.setPower(liftpower);
+
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+            telemetry.addData("Dump Pose", "%4.2f", dump.getPosition());
             telemetry.update();
+            TelemetryPacket packet = new TelemetryPacket();
+            packet.put("Lift Pose", lift.getCurrentPosition());
+            packet.put("Lift Start", liftstart);
+            packet.put("Dump Pose", dump.getPosition());
+            FtcDashboard.getInstance().sendTelemetryPacket(packet);
         }
     }}
