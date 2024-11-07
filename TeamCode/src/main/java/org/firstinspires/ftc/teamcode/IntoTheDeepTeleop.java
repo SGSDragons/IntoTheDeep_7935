@@ -76,10 +76,12 @@ public class IntoTheDeepTeleop extends LinearOpMode {
 
     public static double MIN_DUMP = 0.0;
     public static double MAX_DUMP = 1.0;
-    public static double MAX_LIFT = 1500;
+    public static double MAX_LIFT = 1560;
+    public static double MIN_LIFT = 10;
     public static double CLAMP_CLOSE = 0.05;
     public static double CLAMP_OPEN = 0.3;
-    public static double ARM_TAR = 0;
+    public static double MAX_ARM = 270;
+    public static double MIN_ARM = 35;
 
     @Override
     public void runOpMode() {
@@ -112,11 +114,12 @@ public class IntoTheDeepTeleop extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+
             double max;
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
-            double lateral =  gamepad1.left_stick_x;
+            double axial   = gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
+            double lateral = -gamepad1.left_stick_x;
             double yaw     =  gamepad1.right_stick_x;
             double liftpower = -gamepad2.right_stick_y;
             double armpower = gamepad2.left_stick_y;
@@ -127,6 +130,11 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             double rightFrontPower = axial - lateral - yaw;
             double leftBackPower   = axial - lateral + yaw;
             double rightBackPower  = axial + lateral - yaw;
+
+//            leftFrontPower  = gamepad1.x ? 1.0 : 0.0;  // X gamepad
+//            leftBackPower   = gamepad1.a ? 1.0 : 0.0;  // A gamepad
+//            rightFrontPower = gamepad1.y ? 1.0 : 0.0;  // Y gamepad
+//            rightBackPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
 
             // This ensures that the robot maintains the desired motion.
             max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
@@ -151,13 +159,17 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             double dumpPos = MAX_DUMP - gamepad2.right_trigger*(MAX_DUMP-MIN_DUMP);
             double clampPos = CLAMP_OPEN - gamepad2.left_trigger*(CLAMP_OPEN-CLAMP_CLOSE);
 
-//            leftFrontPower  = gamepad1.x ? 1.0 : 0.0;  // X gamepad
-//            leftBackPower   = gamepad1.a ? 1.0 : 0.0;  // A gamepad
-//            rightFrontPower = gamepad1.y ? 1.0 : 0.0;  // Y gamepad
-//            rightBackPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
 
             dump.setPosition(dumpPos);
-            clamp.setPosition(clampPos);
+            //clamp.setPosition(clampPos);
+
+            if (gamepad2.left_bumper){
+                clamp.setPosition(CLAMP_OPEN);
+            }
+
+            if (gamepad2.right_bumper){
+                clamp.setPosition(CLAMP_CLOSE);
+            }
 
             if (gamepad2.dpad_down){
                 liftstart = lift.getCurrentPosition();
@@ -167,13 +179,20 @@ public class IntoTheDeepTeleop extends LinearOpMode {
                 liftpower = 0;
             }
 
-            if (liftPosition < 0 && liftpower < 0){
+            if (liftPosition < MIN_LIFT && liftpower < 0){
                 liftpower = 0;
             }
 
+//            if (armPosition > MAX_ARM && armpower < 0){
+//                armpower = 0;
+//            }
+//
+//            if (armPosition < MIN_ARM && armpower > 0){
+//                armpower = 0;
+//            }
+
             arm.setPower(armpower);
             lift.setPower(liftpower);
-            //arm.setTargetPosition(ARM_TAR);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
@@ -183,7 +202,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             telemetry.addData("Dump Pose", "%4.2f", dump.getPosition());
             telemetry.update();
             TelemetryPacket packet = new TelemetryPacket();
-            packet.put("Lift Pose", arm.getCurrentPosition());
+            packet.put("Arm Pose", arm.getCurrentPosition());
             packet.put("Lift Pose", lift.getCurrentPosition());
             packet.put("Lift Start", liftstart);
             packet.put("Dump Pose", dump.getPosition());
