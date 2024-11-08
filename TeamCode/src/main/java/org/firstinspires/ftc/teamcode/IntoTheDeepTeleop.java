@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Math.log;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -77,7 +79,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
     public static double MIN_DUMP = 0.0;
     public static double MAX_DUMP = 1.0;
     public static double MAX_LIFT = 1560;
-    public static double MIN_LIFT = 10;
+    public static double MIN_LIFT = 400;
     public static double CLAMP_CLOSE = 0.05;
     public static double CLAMP_OPEN = 0.3;
     public static double MAX_ARM = 270;
@@ -123,6 +125,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             double yaw     =  gamepad1.right_stick_x;
             double liftpower = -gamepad2.right_stick_y;
             double armpower = gamepad2.left_stick_y;
+            double ARM_POW = 1;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
@@ -175,6 +178,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
                 liftstart = lift.getCurrentPosition();
             }
 
+
             if (liftPosition > MAX_LIFT && liftpower > 0){
                 liftpower = 0;
             }
@@ -183,15 +187,23 @@ public class IntoTheDeepTeleop extends LinearOpMode {
                 liftpower = 0;
             }
 
-//            if (armPosition > MAX_ARM && armpower < 0){
-//                armpower = 0;
-//            }
-//
-//            if (armPosition < MIN_ARM && armpower > 0){
-//                armpower = 0;
-//            }
 
-            arm.setPower(armpower);
+            if (armPosition < MIN_ARM+75 && armpower < 0){
+                ARM_POW = 2;
+            }
+
+            if (armPosition > MAX_ARM && armpower > 0){
+                ARM_POW = -4;
+            }
+
+
+
+            if (armPosition < MIN_ARM && armpower < 0){
+                armpower = 0;
+            }
+
+
+            arm.setPower(armpower/ARM_POW);
             lift.setPower(liftpower);
 
             // Show the elapsed game time and wheel power.
