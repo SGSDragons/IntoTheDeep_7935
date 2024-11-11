@@ -34,12 +34,16 @@ import static java.lang.Math.log;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 /*
  * This file contains an example of a Linear "OpMode".
@@ -98,6 +102,12 @@ public class IntoTheDeepTeleop extends LinearOpMode {
         DcMotor lift = hardwareMap.get(DcMotor.class, "lift");
         Servo clamp = hardwareMap.get(Servo.class, "claw");
         Servo dump = hardwareMap.get(Servo.class, "dump");
+        IMU imu = hardwareMap.get(IMU.class,"imu");
+
+        imu.initialize(
+                new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                        RevHubOrientationOnRobot.UsbFacingDirection.UP))
+        );
 
         leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -178,6 +188,10 @@ public class IntoTheDeepTeleop extends LinearOpMode {
                 liftstart = lift.getCurrentPosition();
             }
 
+            if (gamepad1.a){
+                imu.resetYaw();
+            }
+
 
             if (liftPosition > MAX_LIFT && liftpower > 0){
                 liftpower = 0;
@@ -189,11 +203,11 @@ public class IntoTheDeepTeleop extends LinearOpMode {
 
 
             if (armPosition < MIN_ARM+75 && armpower < 0){
-                ARM_POW = 2;
+                ARM_POW = Math.log(armPosition-35) / Math.log(75);
             }
 
             if (armPosition > MAX_ARM && armpower > 0){
-                ARM_POW = -4;
+                ARM_POW = -2;
             }
 
 
@@ -201,6 +215,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             if (armPosition < MIN_ARM && armpower < 0){
                 armpower = 0;
             }
+
 
 
             arm.setPower(armpower/ARM_POW);
@@ -213,11 +228,13 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Dump Pose", "%4.2f", dump.getPosition());
             telemetry.update();
+
             TelemetryPacket packet = new TelemetryPacket();
             packet.put("Arm Pose", arm.getCurrentPosition());
             packet.put("Lift Pose", lift.getCurrentPosition());
             packet.put("Lift Start", liftstart);
             packet.put("Dump Pose", dump.getPosition());
+            packet.put("IMU", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
             FtcDashboard.getInstance().sendTelemetryPacket(packet);
         }
     }}
