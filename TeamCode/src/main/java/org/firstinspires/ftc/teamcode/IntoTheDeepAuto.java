@@ -23,14 +23,17 @@ import java.util.Optional;
 @Config
 public class IntoTheDeepAuto extends LinearOpMode {
 
-    public static int DRIVETEST = 5;
-    public static int TURNTEST = 90;
+    public static int DRIVE1 = 18;
+    public static int DRIVE2 = -9;
+    public static int DRIVE3 = 30;
+    public static int TURN1 = -90;
+    public static int ARM1 = 175;
     public static int STRAFETEST = 5;
 
-    long RIGHT = -90;
-    long LEFT = 90;
-    long FORWARD = 0;
-    long BACKWARD = 180;
+    int RIGHT = -90;
+    int LEFT = 90;
+    int FORWARD = 0;
+    int BACKWARD = 180;
 
 
     public Autodrive driver;
@@ -61,15 +64,20 @@ public class IntoTheDeepAuto extends LinearOpMode {
         Servo dump = hardwareMap.get(Servo.class, "dump");
         IMU imu = hardwareMap.get(IMU.class,"imu");
 
+        int armstart = arm.getCurrentPosition();
+
         imu.initialize(
                 new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                         RevHubOrientationOnRobot.UsbFacingDirection.UP))
         );
 
-        //driver.drive(DRIVETEST,FORWARD);
-        //driver.turn(TURNTEST);
-        //driver.strafe(STRAFETEST,90);
-        arm.setTargetPosition(130);
+        clamp.setPosition(0.05);
+        driver.drive(DRIVE1,FORWARD,false);
+        driver.arm(ARM1);
+        driver.drive(DRIVE2,BACKWARD,true);
+        clamp.setPosition(0.3);
+        sleep(500);
+        driver.turn(TURN1);
 
         }
     }

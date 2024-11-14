@@ -85,9 +85,10 @@ public class IntoTheDeepTeleop extends LinearOpMode {
     public static double MAX_LIFT = 1560;
     public static double MIN_LIFT = 400;
     public static double CLAMP_CLOSE = 0.05;
-    public static double CLAMP_OPEN = 0.3;
+    public static double CLAMP_OPEN = 0.4;
     public static double MAX_ARM = 270;
     public static double MIN_ARM = 35;
+    public static double ARM_GAIN = 0.04;
 
     @Override
     public void runOpMode() {
@@ -103,6 +104,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
         Servo clamp = hardwareMap.get(Servo.class, "claw");
         Servo dump = hardwareMap.get(Servo.class, "dump");
         IMU imu = hardwareMap.get(IMU.class,"imu");
+        DcMotor hang = hardwareMap.get(DcMotor.class,"hang");
 
         imu.initialize(
                 new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
@@ -136,6 +138,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             double liftpower = -gamepad2.right_stick_y;
             double armpower = gamepad2.left_stick_y;
             double ARM_POW = 1;
+            double hangpower = gamepad1.right_trigger - gamepad1.left_trigger;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
@@ -188,10 +191,9 @@ public class IntoTheDeepTeleop extends LinearOpMode {
                 liftstart = lift.getCurrentPosition();
             }
 
-            if (gamepad1.a){
+            if (gamepad1.y){
                 imu.resetYaw();
             }
-
 
             if (liftPosition > MAX_LIFT && liftpower > 0){
                 liftpower = 0;
@@ -203,23 +205,24 @@ public class IntoTheDeepTeleop extends LinearOpMode {
 
 
             if (armPosition < MIN_ARM+75 && armpower < 0){
-                ARM_POW = Math.log(armPosition-35) / Math.log(75);
+                ARM_POW = ARM_GAIN * (armPosition-35);
             }
 
             if (armPosition > MAX_ARM && armpower > 0){
-                ARM_POW = -2;
+                ARM_POW = -0.5;
             }
 
 
 
-            if (armPosition < MIN_ARM && armpower < 0){
-                armpower = 0;
-            }
+//            if (armPosition < MIN_ARM && armpower < 0){
+//                armpower = 0;
+//            }
 
 
 
-            arm.setPower(armpower/ARM_POW);
+            arm.setPower(armpower*ARM_POW);
             lift.setPower(liftpower);
+            hang.setPower(hangpower);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());

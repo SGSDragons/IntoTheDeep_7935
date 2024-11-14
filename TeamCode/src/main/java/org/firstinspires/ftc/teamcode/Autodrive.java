@@ -24,14 +24,14 @@ public class Autodrive {
     private final DcMotor leftBackDrive;
     private final DcMotor rightFrontDrive;
     private final DcMotor rightBackDrive;
-    private DcMotor arm;
-    private DcMotor lift;
+    private final DcMotor arm;
+    private final DcMotor lift;
 
     public final IMU imu;
 
     public static int TICKS_PER_INCH = 6;
 
-    public static double MIN_POWER_TO_MOVE = 0.27;
+    public static double MIN_POWER_TO_MOVE = 0.3;
 
     public static double MIN_ARMPOWER = 0.4;
 
@@ -39,7 +39,7 @@ public class Autodrive {
 
     public static double DriveGain = 0.0005;
 
-    public static double ArmGain = 0.001;
+    public static double ArmGain = 0.01;
 
     public static double minturnpower = 0.4;
 
@@ -62,6 +62,8 @@ public class Autodrive {
         leftBackDrive  = hardwareMap.get(DcMotor.class, "backleft");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "frontright");
         rightBackDrive = hardwareMap.get(DcMotor.class, "backright");
+        arm = hardwareMap.get(DcMotor.class,"arm");
+        lift = hardwareMap.get(DcMotor.class,"lift");
 
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -72,7 +74,13 @@ public class Autodrive {
         imu.resetYaw();
     }
 
-    public void drive(float distanceInches, int direction) {
+    public void drive(float distanceInches, int direction, boolean CLIPPOWER) {
+
+        int clippower = 1;
+        if (CLIPPOWER){
+            clippower = 1000;
+        }
+
         float ticksDistance = 4* (distanceInches * TICKS_PER_INCH);
 
         final int startingPosition =
@@ -83,13 +91,11 @@ public class Autodrive {
 
         float targetPosition = startingPosition + ticksDistance;
 
-        imu.resetYaw();
-
         double error = targetPosition - startingPosition;
 
         //Stop when roughly within one quarter of an inch.
         while (keepRunning.get() && Math.abs(error) > TICKS_PER_INCH ) {
-            double axial = error * DriveGain;
+            double axial = error * DriveGain * clippower;
 
             // If the magnitude of axial power is less than the min drive power,
             // then adjust will be greater than 1.0. Scale without changing
@@ -103,7 +109,7 @@ public class Autodrive {
 
             double yawCorrection = turnGain*(direction-imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
 
-            stuff(axial, 0, yawCorrection);
+            stuff(axial, 0, 0);
 
             int currentPos =
                             leftBackDrive.getCurrentPosition() +
@@ -210,9 +216,11 @@ public class Autodrive {
         stuff(0, 0, 0);
     }
 
-    public void arm(int targetposition){
+    public void arm(int position){
 
         final int startingposition = arm.getCurrentPosition();
+
+        int targetposition = startingposition + position;
 
         double error = targetposition - startingposition;
 
@@ -238,8 +246,9 @@ public class Autodrive {
             TelemetryPacket stats = new TelemetryPacket();
             stats.put("Arm", error);
             FtcDashboard.getInstance().sendTelemetryPacket(stats);
-
         }
+
+        arm.setPower(0);
     }
 
 
