@@ -87,7 +87,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
     public static double CLAMP_CLOSE = 0.05;
     public static double CLAMP_OPEN = 0.4;
     public static double MAX_ARM = 270;
-    public static double MIN_ARM = 35;
+    public static double MIN_ARM = 40;
     public static double ARM_GAIN = 0.04;
 
     @Override
@@ -118,6 +118,8 @@ public class IntoTheDeepTeleop extends LinearOpMode {
 
         double liftstart = lift.getCurrentPosition();
         double armstart = arm.getCurrentPosition();
+
+        boolean stop = true;
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -195,21 +197,34 @@ public class IntoTheDeepTeleop extends LinearOpMode {
                 imu.resetYaw();
             }
 
-            if (liftPosition > MAX_LIFT && liftpower > 0){
-                liftpower = 0;
+            if (gamepad2.b){
+                stop = false;
             }
 
-            if (liftPosition < MIN_LIFT && liftpower < 0){
-                liftpower = 0;
+            if (gamepad2.a){
+                stop = true;
+                liftstart = lift.getCurrentPosition();
+                armstart = arm.getCurrentPosition();
             }
 
+            if (stop) {
 
-            if (armPosition < MIN_ARM+75 && armpower < 0){
-                ARM_POW = ARM_GAIN * (armPosition-35);
-            }
+                if (liftPosition > MAX_LIFT && liftpower > 0) {
+                    liftpower = 0;
+                }
 
-            if (armPosition > MAX_ARM && armpower > 0){
-                ARM_POW = -0.5;
+                if (liftPosition < MIN_LIFT && liftpower < 0) {
+                    liftpower = 0;
+                }
+
+                if (armPosition < MIN_ARM + 75 && armpower < 0) {
+                    ARM_POW = ARM_GAIN * (armPosition - 35);
+                }
+
+                if (armPosition > MAX_ARM && armpower > 0) {
+                    ARM_POW = -0.5;
+                }
+
             }
 
 
@@ -238,6 +253,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
             packet.put("Lift Start", liftstart);
             packet.put("Dump Pose", dump.getPosition());
             packet.put("IMU", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+            packet.put("Stop", stop);
             FtcDashboard.getInstance().sendTelemetryPacket(packet);
         }
     }}

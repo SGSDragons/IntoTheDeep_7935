@@ -31,15 +31,15 @@ public class Autodrive {
 
     public static int TICKS_PER_INCH = 6;
 
-    public static double MIN_POWER_TO_MOVE = 0.3;
+    public static double MIN_POWER_TO_MOVE = 0.35;
 
-    public static double MIN_ARMPOWER = 0.4;
+    public static double MIN_ARMPOWER = 0.7;
 
     public static double turnGain = 0.001;
 
     public static double DriveGain = 0.0005;
 
-    public static double ArmGain = 0.01;
+    public static double ArmGain = 0.02;
 
     public static double minturnpower = 0.4;
 
@@ -74,7 +74,7 @@ public class Autodrive {
         imu.resetYaw();
     }
 
-    public void drive(float distanceInches, int direction, boolean CLIPPOWER) {
+    public void drive(float distanceInches, boolean CLIPPOWER) {
 
         int clippower = 1;
         if (CLIPPOWER){
@@ -107,7 +107,7 @@ public class Autodrive {
             }
             axial = Math.min(0.7, axial);
 
-            double yawCorrection = turnGain*(direction-imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+            //double yawCorrection = turnGain*(direction-imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
 
             stuff(axial, 0, 0);
 
@@ -249,6 +249,31 @@ public class Autodrive {
         }
 
         arm.setPower(0);
+    }
+
+    public void lift(int position){
+
+        final int startingposition = lift.getCurrentPosition();
+
+        int targetposition = startingposition + position;
+
+        double error = targetposition - startingposition;
+
+        //Stop when roughly within one quarter of an inch.
+        while (Math.abs(error) > 3) {
+
+            lift.setPower(0.7);
+
+            int currentPos = lift.getCurrentPosition();
+
+            error = targetposition - currentPos;
+
+            TelemetryPacket stats = new TelemetryPacket();
+            stats.put("Lift", error);
+            FtcDashboard.getInstance().sendTelemetryPacket(stats);
+        }
+
+        lift.setPower(0);
     }
 
 
