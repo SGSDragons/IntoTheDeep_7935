@@ -14,9 +14,12 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Config
 public class LiftAuto extends LinearOpMode {
 
-    public static int DRIVE1 = -15;
+    public static int DRIVE1 = -11;
+    public static int DRIVE2 = 3;
     public static int ARM1 = 50;
-    public static int LIFT1 = 1580;
+    public static int ARM2 = -55;
+    public static int LIFT1 = 1590;
+    public static int LIFT2 = -1500;
     public static double MIN_DUMP = 0;
     public static double MAX_DUMP = 1.0;
 
@@ -59,8 +62,12 @@ public class LiftAuto extends LinearOpMode {
         driver.arm(ARM1);
         driver.lift(LIFT1);
         dump.setPosition(MIN_DUMP);
-        //sleep(500);
+        sleep(1000);
         dump.setPosition(MAX_DUMP);
+        sleep(1000);
+        driver.drive(DRIVE2,false);
+        driver.lift(LIFT2);
+        driver.arm(ARM2);
 
         TelemetryPacket stats = new TelemetryPacket();
         stats.put("Dump", dump.getPosition());

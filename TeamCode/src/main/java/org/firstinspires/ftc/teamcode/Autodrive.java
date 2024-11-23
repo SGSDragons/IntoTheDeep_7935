@@ -33,15 +33,17 @@ public class Autodrive {
 
     public static double MIN_POWER_TO_MOVE = 0.35;
 
-    public static double MIN_ARMPOWER = 0.7;
+    public static double MIN_ARMPOWER = 0.5;
 
     public static double turnGain = 0.001;
 
     public static double DriveGain = 0.0005;
 
-    public static double ArmGain = 0.02;
+    public static double ArmGain = 0.005;
 
     public static double minturnpower = 0.4;
+
+    public static double liftpower = 0.7;
 
     // By default, keep running
     private Supplier<Boolean> keepRunning = () -> true;
@@ -259,10 +261,17 @@ public class Autodrive {
 
         double error = targetposition - startingposition;
 
+        if (position < 0){
+            liftpower = -0.3;
+        }
+        else{
+            liftpower = 0.7;
+        }
+
         //Stop when roughly within one quarter of an inch.
         while (Math.abs(error) > 3) {
 
-            lift.setPower(0.7);
+            lift.setPower(liftpower);
 
             int currentPos = lift.getCurrentPosition();
 

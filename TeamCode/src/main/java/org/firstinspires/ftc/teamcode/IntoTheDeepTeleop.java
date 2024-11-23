@@ -82,13 +82,16 @@ public class IntoTheDeepTeleop extends LinearOpMode {
 
     public static double MIN_DUMP = 0.0;
     public static double MAX_DUMP = 1.0;
-    public static double MAX_LIFT = 1560;
-    public static double MIN_LIFT = 400;
+    public static double MAX_LIFT = 1600;
+    public static double MIN_LIFT = 355;
     public static double CLAMP_CLOSE = 0.05;
-    public static double CLAMP_OPEN = 0.4;
-    public static double MAX_ARM = 270;
-    public static double MIN_ARM = 40;
-    public static double ARM_GAIN = 0.04;
+    public static double CLAMP_OPEN = 0.5;
+    public static double SPECIMEN = 210;
+    public static double MIN_ARM = 45;
+    public static double ARM_GAIN = 0.01;
+    public static double ARM_BREAK = -0.2;
+    public static double ARM_FEEDFORWARD = 0.0;
+    public static double DRIVE_CUT = 1.3;
 
     @Override
     public void runOpMode() {
@@ -119,7 +122,7 @@ public class IntoTheDeepTeleop extends LinearOpMode {
         double liftstart = lift.getCurrentPosition();
         double armstart = arm.getCurrentPosition();
 
-        boolean stop = true;
+        boolean stop = false;
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -128,18 +131,21 @@ public class IntoTheDeepTeleop extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
+        int verticalOffset = 60;
+        int horizontalOffset = 225;
+
+
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
             double max;
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial   = gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
+            double axial   = gamepad1.left_stick_y/DRIVE_CUT;  // Note: pushing stick forward gives negative value
             double lateral = -gamepad1.left_stick_x;
-            double yaw     =  gamepad1.right_stick_x;
+            double yaw     =  gamepad1.right_stick_x/DRIVE_CUT;
             double liftpower = -gamepad2.right_stick_y;
             double armpower = gamepad2.left_stick_y;
-            double ARM_POW = 1;
             double hangpower = gamepad1.right_trigger - gamepad1.left_trigger;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
@@ -197,46 +203,42 @@ public class IntoTheDeepTeleop extends LinearOpMode {
                 imu.resetYaw();
             }
 
+            if (gamepad2.dpad_up){
+                liftstart = lift.getCurrentPosition();
+                armstart = arm.getCurrentPosition();
+            }
+
+            if (gamepad2.dpad_down){
+                SPECIMEN = armPosition;
+            }
+
             if (gamepad2.b){
                 stop = false;
             }
 
             if (gamepad2.a){
                 stop = true;
-                liftstart = lift.getCurrentPosition();
-                armstart = arm.getCurrentPosition();
             }
 
             if (stop) {
 
-                if (liftPosition > MAX_LIFT && liftpower > 0) {
-                    liftpower = 0;
-                }
-
                 if (liftPosition < MIN_LIFT && liftpower < 0) {
-                    liftpower = 0;
+                    liftpower = 0.1;
                 }
 
                 if (armPosition < MIN_ARM + 75 && armpower < 0) {
-                    ARM_POW = ARM_GAIN * (armPosition - 35);
-                }
-
-                if (armPosition > MAX_ARM && armpower > 0) {
-                    ARM_POW = -0.5;
+                    armpower *= ARM_GAIN * (armPosition-35);
                 }
 
             }
 
+            if (gamepad2.x){
+                armpower += ARM_BREAK;
+            }
 
 
-//            if (armPosition < MIN_ARM && armpower < 0){
-//                armpower = 0;
-//            }
-
-
-
-            arm.setPower(armpower*ARM_POW);
             lift.setPower(liftpower);
+            arm.setPower(armpower);
             hang.setPower(hangpower);
 
             // Show the elapsed game time and wheel power.
