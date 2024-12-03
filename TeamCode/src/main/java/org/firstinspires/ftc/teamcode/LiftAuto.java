@@ -10,19 +10,20 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.opencv.core.Mat;
+
 @Autonomous(name = "LiftAuto")
 @Config
 public class LiftAuto extends LinearOpMode {
 
-    public static int DRIVE1 = -11;
+    public static int DRIVE1 = -12;
     public static int DRIVE2 = 3;
     public static int ARM1 = 50;
     public static int ARM2 = -55;
-    public static int LIFT1 = 1590;
-    public static int LIFT2 = -1500;
+    public static int LIFT1 = 1610;
+    public static int LIFT2 = -1610;
     public static double MIN_DUMP = 0;
     public static double MAX_DUMP = 1.0;
-
 
     public Autodrive driver;
     DcMotor arm;
@@ -61,9 +62,9 @@ public class LiftAuto extends LinearOpMode {
         driver.drive(DRIVE1,false);
         driver.arm(ARM1);
         driver.lift(LIFT1);
-        dump.setPosition(MIN_DUMP);
+        driver.dump(MIN_DUMP);
         sleep(1000);
-        dump.setPosition(MAX_DUMP);
+        driver.dump(MAX_DUMP);
         sleep(1000);
         driver.drive(DRIVE2,false);
         driver.lift(LIFT2);

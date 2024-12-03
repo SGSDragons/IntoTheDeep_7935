@@ -12,12 +12,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Config
 public class ArmAuto extends LinearOpMode {
 
-    public static int DRIVE1 = 11;
+    public static int DRIVE1 = 12;
     public static int DRIVE2 = -9;
     public static int DRIVE3 = 36;
     public static int TURN1 = -90;
     public static int ARM1 = 170;
     public static int ARM2 = -200;
+    public static int StrafeTest = -10;
 
     int RIGHT = -90;
     int LEFT = 90;
@@ -69,6 +70,8 @@ public class ArmAuto extends LinearOpMode {
         sleep(500);
         driver.turn(TURN1);
         driver.drive(DRIVE3,false);
+        //sleep(1000);
+        //driver.strafe(StrafeTest,0);
 
         }
     }

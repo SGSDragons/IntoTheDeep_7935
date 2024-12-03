@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -26,12 +27,14 @@ public class Autodrive {
     private final DcMotor rightBackDrive;
     private final DcMotor arm;
     private final DcMotor lift;
+    private final Servo dump;
+    //private final Servo intake;
 
     public final IMU imu;
 
     public static int TICKS_PER_INCH = 6;
 
-    public static double MIN_POWER_TO_MOVE = 0.35;
+    public static double MIN_POWER_TO_MOVE = 0.375;
 
     public static double MIN_ARMPOWER = 0.5;
 
@@ -45,16 +48,22 @@ public class Autodrive {
 
     public static double liftpower = 0.7;
 
+    public static double MIN_DUMP = 0;
+
+    public static double MAX_DUMP = 1.0;
+
     // By default, keep running
     private Supplier<Boolean> keepRunning = () -> true;
 
-    public Autodrive(DcMotor leftFrontDrive, DcMotor leftBackDrive, DcMotor rightFrontDrive, DcMotor rightBackDrive, DcMotor arm, DcMotor lift, IMU imu) {
+    public Autodrive(DcMotor leftFrontDrive, DcMotor leftBackDrive, DcMotor rightFrontDrive, DcMotor rightBackDrive, DcMotor arm, DcMotor lift, Servo dump, IMU imu) {
         this.leftFrontDrive = leftFrontDrive;
         this.leftBackDrive = leftBackDrive;
         this.rightFrontDrive = rightFrontDrive;
         this.rightBackDrive = rightBackDrive;
         this.arm = arm;
         this.lift = lift;
+        this.dump = dump;
+        //this.intake = intake;
         this.imu = imu;
     }
 
@@ -66,6 +75,8 @@ public class Autodrive {
         rightBackDrive = hardwareMap.get(DcMotor.class, "backright");
         arm = hardwareMap.get(DcMotor.class,"arm");
         lift = hardwareMap.get(DcMotor.class,"lift");
+        dump = hardwareMap.get(Servo.class,"dump");
+        //intake = hardwareMap.get(Servo.class,"intake");
 
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -283,6 +294,29 @@ public class Autodrive {
         }
 
         lift.setPower(0);
+    }
+
+    public void dump(double dumppos){
+
+        int currentlift = lift.getCurrentPosition();
+
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                dump.setPosition(dumppos);
+            }
+        });
+
+        Thread t2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                lift(currentlift);
+            }
+        });
+
+        t1.start();
+        t2.start();
+
     }
 
 
