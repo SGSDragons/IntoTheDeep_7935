@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class ArmAuto extends LinearOpMode {
 
     public static int DRIVE1 = 12;
-    public static int DRIVE2 = -9;
+    public static int DRIVE2 = -10;
     public static int DRIVE3 = 36;
     public static int TURN1 = -90;
     public static int ARM1 = 170;

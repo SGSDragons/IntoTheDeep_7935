@@ -83,12 +83,12 @@ public class IntoTheDeepTeleop extends LinearOpMode {
     public static double MIN_DUMP = 0.0;
     public static double MAX_DUMP = 1.0;
     public static double MAX_LIFT = 1600;
-    public static double MIN_LIFT = 355;
+    public static double MIN_LIFT = 345;
     public static double CLAMP_CLOSE = 0.05;
     public static double CLAMP_OPEN = 0.5;
     public static double SPECIMEN = 210;
     public static double MIN_ARM = 45;
-    public static double ARM_GAIN = 0.01;
+    public static double ARM_GAIN = 0.005;
     public static double ARM_BREAK = -0.2;
     public static double ARM_FEEDFORWARD = 0.0;
     public static double DRIVE_CUT = 1.3;
@@ -203,13 +203,21 @@ public class IntoTheDeepTeleop extends LinearOpMode {
                 imu.resetYaw();
             }
 
+//            if (gamepad2.dpad_right){
+//                liftstart = lift.getCurrentPosition();
+//                armstart = arm.getCurrentPosition();
+//            }
+//
+//            if (gamepad2.dpad_up){
+//                MIN_LIFT = liftPosition;
+//            }
+//
+//            if (gamepad2.dpad_down){
+//                MIN_ARM = armPosition;
+//            }
             if (gamepad2.dpad_up){
                 liftstart = lift.getCurrentPosition();
                 armstart = arm.getCurrentPosition();
-            }
-
-            if (gamepad2.dpad_down){
-                SPECIMEN = armPosition;
             }
 
             if (gamepad2.b){

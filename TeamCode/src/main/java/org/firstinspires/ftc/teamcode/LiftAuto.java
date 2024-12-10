@@ -69,6 +69,7 @@ public class LiftAuto extends LinearOpMode {
         driver.drive(DRIVE2,false);
         driver.lift(LIFT2);
         driver.arm(ARM2);
+        lift.setPower(0);
 
         TelemetryPacket stats = new TelemetryPacket();
         stats.put("Dump", dump.getPosition());

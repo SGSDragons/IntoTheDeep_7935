@@ -310,12 +310,14 @@ public class Autodrive {
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                lift(currentlift);
+                lift.setPower(0.2);
             }
         });
 
         t1.start();
         t2.start();
+
+        lift.setPower(0);
 
     }
 
