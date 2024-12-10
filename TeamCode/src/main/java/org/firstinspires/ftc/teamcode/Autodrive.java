@@ -272,28 +272,35 @@ public class Autodrive {
 
         double error = targetposition - startingposition;
 
-        if (position < 0){
-            liftpower = -0.3;
-        }
-        else{
-            liftpower = 0.7;
-        }
-
-        //Stop when roughly within one quarter of an inch.
+        // if (position < 0){
+        //     liftpower = -0.3;
+        // }
+        // else{
+        //     liftpower = 0.7;
+        // }
+        
+        // CB: See documentation on https://ftctechnh.github.io/ftc_app/doc/javadoc/com/qualcomm/robotcore/hardware/DcMotor.RunMode.html#RUN_TO_POSITION
+        lift.setRunMode(RunMode.RUN_TO_POSITION);
+        lift.setTargetPosition(targetposition);
+        
+        // Wait until the error is down to an approriate level
         while (Math.abs(error) > 3) {
-
-            lift.setPower(liftpower);
-
+            
+            // CB: The motor's controller should be managing this
+            // lift.setPower(liftpower);
+            
             int currentPos = lift.getCurrentPosition();
-
+            
             error = targetposition - currentPos;
-
+            
             TelemetryPacket stats = new TelemetryPacket();
             stats.put("Lift", error);
             FtcDashboard.getInstance().sendTelemetryPacket(stats);
         }
-
-        lift.setPower(0);
+        
+        // CB: Commented so that setTargetPosition holds at this position.
+        // Alternatively, see https://ftctechnh.github.io/ftc_app/doc/javadoc/com/qualcomm/robotcore/hardware/DcMotor.ZeroPowerBehavior.html#BRAKE
+        //lift.setPower(0);
     }
 
     public void dump(double dumppos){
