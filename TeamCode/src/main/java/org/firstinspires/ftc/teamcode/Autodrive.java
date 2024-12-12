@@ -281,14 +281,14 @@ public class Autodrive {
             liftpower = 0.7;
         }
 
-        lift.setTargetPosition(targetposition);
-        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        lift.setPower(0.7);
+//        lift.setTargetPosition(targetposition);
+//        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        lift.setPower(0.7);
 
         //Stop when roughly within one quarter of an inch.
-        while (Math.abs(error) < 3) {
+        while (Math.abs(error) > 3) {
 
-//            lift.setPower(liftpower);
+            lift.setPower(liftpower);
 
             int currentPos = lift.getCurrentPosition();
 
@@ -297,6 +297,7 @@ public class Autodrive {
             TelemetryPacket stats = new TelemetryPacket();
             stats.put("Lift", error);
             stats.put("End", end);
+            stats.put("current", lift.getCurrentPosition());
             FtcDashboard.getInstance().sendTelemetryPacket(stats);
         }
 
@@ -305,7 +306,7 @@ public class Autodrive {
         TelemetryPacket stats = new TelemetryPacket();
         stats.put("End", end);
         FtcDashboard.getInstance().sendTelemetryPacket(stats);
-       //lift.setPower(0);
+       lift.setPower(0);
     }
 
     public void dump(double dumppos){
