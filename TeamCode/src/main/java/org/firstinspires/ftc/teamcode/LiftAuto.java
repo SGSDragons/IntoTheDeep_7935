@@ -74,7 +74,7 @@ public class LiftAuto extends LinearOpMode {
         lift.setPower(0);
 
         TelemetryPacket stats = new TelemetryPacket();
-        stats.put("Dump", dump.getPosition());
+        stats.put("dump", dump.getPosition());
         FtcDashboard.getInstance().sendTelemetryPacket(stats);
 
         }

@@ -297,7 +297,7 @@ public class Autodrive {
             TelemetryPacket stats = new TelemetryPacket();
             stats.put("Lift", error);
             stats.put("End", end);
-            stats.put("current", lift.getCurrentPosition());
+//            stats.put("current", lift.getCurrentPosition());
             FtcDashboard.getInstance().sendTelemetryPacket(stats);
         }
 
