@@ -62,9 +62,11 @@ public class LiftAuto extends LinearOpMode {
         driver.drive(DRIVE1,false);
         driver.arm(ARM1);
         driver.lift(LIFT1);
-        driver.dump(MIN_DUMP);
+        //driver.dump(MIN_DUMP);
+        dump.setPosition(MIN_DUMP);
         sleep(1000);
-        driver.dump(MAX_DUMP);
+        //driver.dump(MAX_DUMP);
+        dump.setPosition(MAX_DUMP);
         sleep(1000);
         driver.drive(DRIVE2,false);
         driver.lift(LIFT2);

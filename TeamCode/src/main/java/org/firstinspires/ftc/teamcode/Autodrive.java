@@ -268,6 +268,8 @@ public class Autodrive {
 
         final int startingposition = lift.getCurrentPosition();
 
+        boolean end = false;
+
         int targetposition = startingposition + position;
 
         double error = targetposition - startingposition;
@@ -279,10 +281,14 @@ public class Autodrive {
             liftpower = 0.7;
         }
 
-        //Stop when roughly within one quarter of an inch.
-        while (Math.abs(error) > 3) {
+        lift.setTargetPosition(targetposition);
+        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift.setPower(0.7);
 
-            lift.setPower(liftpower);
+        //Stop when roughly within one quarter of an inch.
+        while (Math.abs(error) < 3) {
+
+//            lift.setPower(liftpower);
 
             int currentPos = lift.getCurrentPosition();
 
@@ -290,10 +296,16 @@ public class Autodrive {
 
             TelemetryPacket stats = new TelemetryPacket();
             stats.put("Lift", error);
+            stats.put("End", end);
             FtcDashboard.getInstance().sendTelemetryPacket(stats);
         }
 
-        lift.setPower(0);
+        end = true;
+
+        TelemetryPacket stats = new TelemetryPacket();
+        stats.put("End", end);
+        FtcDashboard.getInstance().sendTelemetryPacket(stats);
+       //lift.setPower(0);
     }
 
     public void dump(double dumppos){
