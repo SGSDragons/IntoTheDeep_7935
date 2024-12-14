@@ -34,7 +34,9 @@ public class Autodrive {
 
     public static int TICKS_PER_INCH = 6;
 
-    public static double MIN_POWER_TO_MOVE = 0.375;
+    public static double MIN_POWER_TO_MOVE = 0.4;
+
+    public static double MIN_STRAFE_POWER = 0.8;
 
     public static double MIN_ARMPOWER = 0.5;
 
@@ -44,7 +46,7 @@ public class Autodrive {
 
     public static double ArmGain = 0.005;
 
-    public static double minturnpower = 0.4;
+    public static double minturnpower = 0.45;
 
     public static double liftpower = 0.7;
 
@@ -194,7 +196,7 @@ public class Autodrive {
             // then adjust will be greater than 1.0. Scale without changing
             // it's sign to ensure it's strong enough.
             // If scale is less than 1, then don't make the power any weaker.
-            double adjust = MIN_POWER_TO_MOVE / Math.abs(lateral);
+            double adjust = MIN_STRAFE_POWER / Math.abs(lateral);
             if (adjust > 1.0) {
                 lateral = lateral * adjust;
             }
@@ -204,9 +206,9 @@ public class Autodrive {
                 lateral = lateral * adjust;
             }
 
-            //double yawCorrection = turnGain*(direction-imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+            double yawCorrection = turnGain*(direction-imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
 
-            stuff(0, lateral, 0);
+            stuff(0, lateral, yawCorrection);
 
             int currentPos =
                             -leftBackDrive.getCurrentPosition() +
@@ -274,21 +276,12 @@ public class Autodrive {
 
         double error = targetposition - startingposition;
 
-        if (position < 0){
-            liftpower = -0.3;
-        }
-        else{
-            liftpower = 0.7;
-        }
-
-//        lift.setTargetPosition(targetposition);
-//        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.setPower(0.7);
+        lift.setTargetPosition(targetposition);
+        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift.setPower(0.7);
 
         //Stop when roughly within one quarter of an inch.
-        while (Math.abs(error) > 3) {
-
-            lift.setPower(liftpower);
+        while (lift.isBusy()) {
 
             int currentPos = lift.getCurrentPosition();
 
@@ -296,17 +289,9 @@ public class Autodrive {
 
             TelemetryPacket stats = new TelemetryPacket();
             stats.put("Lift", error);
-            stats.put("End", end);
-//            stats.put("current", lift.getCurrentPosition());
+            stats.put("current", lift.getCurrentPosition());
             FtcDashboard.getInstance().sendTelemetryPacket(stats);
         }
-
-        end = true;
-
-        TelemetryPacket stats = new TelemetryPacket();
-        stats.put("End", end);
-        FtcDashboard.getInstance().sendTelemetryPacket(stats);
-       lift.setPower(0);
     }
 
     public void dump(double dumppos){

@@ -16,8 +16,9 @@ import org.opencv.core.Mat;
 @Config
 public class LiftAuto extends LinearOpMode {
 
-    public static int DRIVE1 = -12;
+    public static int DRIVE1 = -13;
     public static int DRIVE2 = 3;
+    public static int STRAFE1 = -5;
     public static int ARM1 = 50;
     public static int ARM2 = -55;
     public static int LIFT1 = 1610;
@@ -59,22 +60,19 @@ public class LiftAuto extends LinearOpMode {
         );
 
         dump.setPosition(MAX_DUMP);
-        driver.drive(DRIVE1,false);
         driver.arm(ARM1);
+        driver.drive(DRIVE1,false);
         driver.lift(LIFT1);
-        //driver.dump(MIN_DUMP);
         dump.setPosition(MIN_DUMP);
         sleep(1000);
-        //driver.dump(MAX_DUMP);
         dump.setPosition(MAX_DUMP);
         sleep(1000);
         driver.drive(DRIVE2,false);
         driver.lift(LIFT2);
         driver.arm(ARM2);
-        lift.setPower(0);
 
         TelemetryPacket stats = new TelemetryPacket();
-        stats.put("dump", dump.getPosition());
+        stats.put("Dump", dump.getPosition());
         FtcDashboard.getInstance().sendTelemetryPacket(stats);
 
         }
